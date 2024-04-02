@@ -13,6 +13,8 @@ const logger = new Logger('TelosCloud');
 const TELOS_CLOUD_LOGGED_USER = 'telos-cloud.logged';
 const CAIN_ID__TELOS_MAINNET = '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11';
 
+const LOGGIN_STEPS = 7;
+const TRANSACTION_STEPS = 8;
 
 export class TelosCloud {
     googleSubscription: Subscription | null = null;
@@ -22,9 +24,47 @@ export class TelosCloud {
     config: TelosCloudOptions | null = null;
     user: User | null = null;
     logged: TelosCloudLoggedUser | null = null;
-    
+
+    onStep = new Subject<void|null>();
+    onReset = new Subject<number>();
+    onProgress = new Subject<number>();
+    step = -1;
+    steps = 5;
+    stepsEnabled = true;
+
     constructor(config: TelosCloudOptions) {
         logger.method('constructor', config);
+        this.onReset.subscribe({
+            next: (steps) => {
+                logger.method('onReset', steps);
+                this.steps = steps;
+                this.step = -1;
+                this.onStep.next();
+            },
+        });
+        this.onStep.subscribe({
+            next: (_null) => {
+                if (_null === null) {
+                    this.onProgress.next(-1);
+                } else {
+                    this.step++;
+                    logger.method('onStep', this.step);
+                    if (this.stepsEnabled) {
+                        this.onProgress.next(this.step/this.steps);
+                    }
+                }
+            },
+        });
+        this.onProgress.subscribe({
+            next: (progress) => {
+                logger.method('onProgress', progress);
+                if (progress === 1) {
+                    setTimeout(() => {
+                        this.onProgress.next(-1);
+                    }, 1500);
+                }
+            },
+        });
         if (config.logger) {
             logger.enable();
         }
@@ -67,6 +107,7 @@ export class TelosCloud {
             appName: config.appName ?? 'TelosCloud',
             appId: config.metakeep.appId,
             accountCreateAPI: config.accountCreation?.rpcEndpoint,
+            onStep: this.onStep,
         });
 
         if (config.accountCreation && config.accountCreation.allowRedirect) {
@@ -98,9 +139,10 @@ export class TelosCloud {
         this.init(this.config as TelosCloudOptions);
     }
 
-    performTelosCloudLogin(data: GoogleCredentials) {
+    async performTelosCloudLogin(data: GoogleCredentials) {
         logger.method('performTelosCloudLogin', data);
-        this.setMetakeepZero(data);
+        this.onReset.next(LOGGIN_STEPS);
+        return this.setMetakeepZero(data);
     }
 
     async saveLoggedUser() {
@@ -143,7 +185,9 @@ export class TelosCloud {
                     jwt: '',
                     account: this.logged.account,
                 }
-                this.performTelosCloudLogin(credentials);
+                this.stepsEnabled = false;
+                await this.performTelosCloudLogin(credentials);
+                this.stepsEnabled = true;
             }
         }
     }
@@ -157,7 +201,7 @@ export class TelosCloud {
             const ualUsers = await this.auth.login();
             if (ualUsers?.length) {
                 const useFuel = this.config?.fuel;
-                const user = useFuel ? await initFuelUserWrapper(ualUsers[0], useFuel) : ualUsers[0];
+                const user = useFuel ? await initFuelUserWrapper(ualUsers[0], useFuel, this.onStep) : ualUsers[0];
                 trace('user:', [user]);
                 if (user) {
                     this.user = user
@@ -205,17 +249,6 @@ export class TelosCloud {
         };
     }
 
-    // async isAutoLoginAvailable(): Promise<boolean>{
-    //     // console.log('TelosCloud.isAutoLoginAvailable()');
-    //     return false;
-    // }
-
-    // async login(): Promise<string> {
-    //     return new Promise((resolve) => {
-    //         this.onLogin.next(); // LOGIN
-    //     });
-    // }
-
     async logout(): Promise<void> {
         logger.method('logout');
         this.logged = null;
@@ -228,6 +261,7 @@ export class TelosCloud {
             transact: async (trx:any) => {
                 const trace = logger.method('api.transact', trx);
                 if (this.user) {
+                    this.onReset.next(TRANSACTION_STEPS);
                     return this.user.signTransaction(trx, { broadcast: true }).then((result) => {
                         trace('result:', result.transactionId, [result]);
                         return ({ ...result, transaction_id: result.transactionId });

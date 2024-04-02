@@ -16,6 +16,7 @@ export default defineComponent({
         const isLogged = ref(false);
         const isLoading = ref(false);
         const transactionId = ref('');
+        const percent = ref(-100);
 
         // -- telos cloud instance --
         const telos = new TelosCloud({
@@ -64,6 +65,10 @@ export default defineComponent({
             pubKeys.value = [];
             isLogged.value = false;
             telos.reset();
+        });
+
+        telos.onProgress.subscribe((p) => {
+            percent.value = Math.round(p * 100);
         });
 
         // Check if we are already logged in
@@ -133,6 +138,7 @@ export default defineComponent({
             isLogged,
             transactionId,
             isLoading,
+            percent,
         };
     },
 });
@@ -141,39 +147,70 @@ export default defineComponent({
 <template>
     <NavegationBar />
     <div class="p-telos-cloud">
-        <!-- Necesitamos un Card en el medio de la pantalla que tenga la siguiente información dependiendo si estamos logueados o no: -->
-        
-            <template v-if="!isLogged">
-                <div class="p-telos-cloud__welcome-card">
-                    <h1 class="p-telos-cloud__welcome-title">Cloud Login for Telos Zero</h1>
-                    <div class="c-login-buttons__google-btn" id="google_btn" data-client_id="${googleCtrl.clientId}">loading...</div>
+        <template v-if="!isLogged">
+            <div class="p-telos-cloud__welcome-card">
+                <h1 class="p-telos-cloud__welcome-title">Cloud Login for Telos Zero</h1>
+                <div class="c-login-buttons__google-btn" id="google_btn" data-client_id="${googleCtrl.clientId}">loading...</div>
+                <!-- Progress bar -->
+                <div class="p-telos-cloud__progress-bar" :style="`opacity: ${percent === -100 ? 0 : 1}`">
+                    <div
+                        :class="{
+                            'p-telos-cloud__progress-bar__fill': true,
+                            'p-telos-cloud__progress-bar__fill--filled': percent === 100,
+                        }"
+                        :style="{ width: percent.toString() + '%' }"
+                    ></div>
                 </div>
-            </template>
+            </div>
+        </template>
 
-            <template v-else>
-                <div class="p-telos-cloud__logged_card">
-                    <h1 class="p-telos-cloud__logged-title" @click="visitAccount">account: {{ userAccount }}</h1>
-                    <p class="p-telos-cloud__logged-pubkeys">key: {{ pubKeys[0] }}</p>
+        <template v-else>
+            <div class="p-telos-cloud__logged_card">
+                <h1 class="p-telos-cloud__logged-title" @click="visitAccount">account: {{ userAccount }}</h1>
+                <p class="p-telos-cloud__logged-pubkeys">key: {{ pubKeys[0] }}</p>
 
-                    <div class="p-telos-cloud__logged-btns">
-                        <button class="p-telos-cloud__logged-logout-btn" @click="logout">Logout</button>
-                        <button
-                            :class="{'p-telos-cloud__logged-stake-btn': true, 'p-telos-cloud__logged-stake-btn--loading': isLoading }"
-                            @click="signExampleTransaction">
-                                Stake 0.0001 TLOS for CPU
-                        </button>
-                    </div>
-                    
-                    <a class="p-telos-cloud__trx" v-if="transactionId" :href="'https://explorer.telos.net/transaction/' + transactionId" target="_blank">
-                        {{ transactionId }}
-                    </a>
+                <!-- Buttons -->
+                <div class="p-telos-cloud__logged-btns">
+                    <button class="p-telos-cloud__logged-logout-btn" @click="logout">Logout</button>
+                    <button
+                        :class="{'p-telos-cloud__logged-stake-btn': true, 'p-telos-cloud__logged-stake-btn--loading': isLoading }"
+                        @click="signExampleTransaction">
+                            Stake 0.0001 TLOS for CPU
+                    </button>
                 </div>
-            </template>
+
+                <!-- Progress bar -->
+                <div class="p-telos-cloud__progress-bar" :style="`opacity: ${percent === -100 ? 0 : 1}`">
+                    <div
+                        :class="{
+                            'p-telos-cloud__progress-bar__fill': true,
+                            'p-telos-cloud__progress-bar__fill--filled': percent === 100,
+                        }"
+                        :style="{ width: percent.toString() + '%' }"
+                    ></div>
+                </div>
+
+                <!-- Transaction ID -->
+                <a class="p-telos-cloud__trx" v-if="transactionId" :href="'https://explorer.telos.net/transaction/' + transactionId" target="_blank">
+                    {{ transactionId }}
+                </a>
+            </div>
+        </template>
 
     </div>
 </template>
 
 <style lang="scss">
+
+// fade out effect
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
 
 .p-telos-cloud {
     display: flex;
@@ -183,6 +220,26 @@ export default defineComponent({
     width: 100%;
     background-image: linear-gradient(0.4turn,#071033,#6039a4);
         
+    &__progress-bar {
+        width: 100%;
+        height: 4px;
+        background-color: #f1f1f1;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+
+    &__progress-bar__fill {
+        height: 100%;
+        background-color: #007bff;
+        opacity: 1;
+        &--empty {
+            opacity: 0;
+        }
+        &--filled {
+            animation: fadeOut 1s forwards 0.5s;
+        }
+    }
 
     &__welcome-card, &__logged_card {
         display: flex;
@@ -210,7 +267,7 @@ export default defineComponent({
     }
 
     &__trx {
-        padding-top: 40px;
+        padding-top: 20px;
         display: block;
         text-decoration: none;
         color: blue;

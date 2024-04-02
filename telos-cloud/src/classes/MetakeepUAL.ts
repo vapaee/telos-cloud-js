@@ -11,6 +11,7 @@ import { APIClient, NameType, PackedTransaction, Serializer, Transaction } from 
 import { metakeepCache } from './MetakeepCache';
 import { User } from 'universal-authenticator-library';
 import { Logger } from './Logger';
+import { Subject } from 'rxjs';
 
 export interface UserCredentials {
     email: string;
@@ -23,6 +24,7 @@ export interface MetakeepUALOptions {
     accountCreateAPI?: string;
     accountCreateCallback?: () => Promise<string>;
     reasonCallback?: (transaction: any) => string;
+    onStep?: Subject<void|null>,
 }
 let metakeep: MetaKeep | null = null;
 const metakeep_name = 'metakeep.ual';
@@ -101,6 +103,8 @@ export class MetakeepAuthenticator extends Authenticator {
     private accountNameSelector: MetakeepNameAccountSelector = metakeepDefaultAccountNameSelector;
 
     private accountCreateCallback?: (credentials: CreateAccountCallBack) => Promise<string>;
+
+    public onStep: Subject<void|null>
     
     constructor(chains: Chain[], options: MetakeepUALOptions) {
         super(chains, options);
@@ -121,6 +125,7 @@ export class MetakeepAuthenticator extends Authenticator {
             email: metakeepCache.getLogged() ?? '',
             jwt: '',
         };
+        this.onStep = options.onStep ?? new Subject<void|null>();
         trace('userCredentials:', this.userCredentials);
     }
 
@@ -265,7 +270,6 @@ export class MetakeepAuthenticator extends Authenticator {
     resolveAccountName() {
         const trace = this.logger.method('resolveAccountName');
         return new Promise<string>(async (resolve, reject) => {
-            // console.log('MetakeepAuthenticator.resolveAccountName() start:');
             trace('start:');
             let accountName = '';
             if (!metakeep) {
@@ -278,30 +282,32 @@ export class MetakeepAuthenticator extends Authenticator {
             }
 
             // we check if we have the account name in the cache
-            // console.log('MetakeepAuthenticator.resolveAccountName() check point 1');
-            trace('check point 1');
             const accountNames = metakeepCache.getAccountNames(this.userCredentials.email, this.chainId);
-            // console.log('MetakeepAuthenticator.resolveAccountName() accountNames', accountNames);
             trace('accountNames:', accountNames);
             if (accountNames.length > 0) {
+                let selectedAccount = '';
                 if (accountNames.length > 1) {
                     // if we have more than one account, we ask the user to select one using this callback
-                    const selectedAccount = await this.accountSelector.selectAccount(accountNames);
+                    selectedAccount = await this.accountSelector.selectAccount(accountNames);
                     this.resetAccountSelector();
                     metakeepCache.setSelectedAccountName(this.userCredentials.email, this.chainId, selectedAccount);
                     return resolve(selectedAccount);
                 } else {
-                    return resolve(accountNames[0]);
+                    selectedAccount = accountNames[0];
                 }
+
+                this.onStep.next(); // Step 1
+                this.onStep.next(); // Step 2
+                this.onStep.next(); // Step 3
+                return resolve(selectedAccount);
             }
 
             // if not, we fetch all the accounts for the email
             const credentials = await metakeep.getWallet();
             const public_key = credentials.wallet.eosAddress;
+            this.onStep.next(); // Step 1
 
             metakeepCache.addCredentials(this.userCredentials.email, credentials.wallet);
-            // console.log('MetakeepAuthenticator.resolveAccountName() credentials', credentials);
-            // console.log('MetakeepAuthenticator.resolveAccountName() this.endpoint', this.endpoint);
             trace('credentials:', credentials);
             trace('this.endpoint:', this.endpoint);
 
@@ -313,16 +319,14 @@ export class MetakeepAuthenticator extends Authenticator {
                 });
                 const accountExists = response?.data?.account_names.length>0;
                 let names:string[] = [];
+                this.onStep.next(); // Step 2
 
-                // console.log('MetakeepAuthenticator.resolveAccountName() response?.data?.account_names', response?.data?.account_names);
-                // console.log('MetakeepAuthenticator.resolveAccountName() accountExists', accountExists);
                 trace('response?.data?.account_names:', response?.data?.account_names);
                 trace('accountExists:', accountExists);
 
                 if (accountExists) {
                     names = response.data.account_names;
                     names.forEach(name => metakeepCache.addAccountName(this.userCredentials.email, this.chainId, name));
-                    // console.log('MetakeepAuthenticator.resolveAccountName() names', names);
                     if (names.length > 1) {
                         // if we have more than one account, we ask the user to select one using this callback
                         accountName = await this.accountSelector.selectAccount(names);
@@ -330,7 +334,6 @@ export class MetakeepAuthenticator extends Authenticator {
                     } else {
                         accountName = names[0];
                     }
-                    // console.log('MetakeepAuthenticator.resolveAccountName() accountName', accountName);
                     trace('accountName:', accountName);
                     metakeepCache.setSelectedAccountName(this.userCredentials.email, this.chainId, accountName);
                 } else {
@@ -338,6 +341,7 @@ export class MetakeepAuthenticator extends Authenticator {
                     metakeepCache.addAccountName(this.userCredentials.email, this.chainId, accountName);
                     names = [accountName];
                 }
+                this.onStep.next(); // Step 3
 
                 this.saveCache();
                 return resolve(accountName);
@@ -354,7 +358,6 @@ export class MetakeepAuthenticator extends Authenticator {
      * @param accountName    The account name of the user for Authenticators that do not store accounts (optional)
      */
     login: () => Promise<[User]> = async () => {
-        // console.log('MetakeepAuthenticator.login()');
         const trace = this.logger.method('login');
         if (this.userCredentials.email === '') {
             throw new Error('No account email');
@@ -370,16 +373,19 @@ export class MetakeepAuthenticator extends Authenticator {
                 email: this.userCredentials.email,
             },
         });
+        this.onStep.next();
 
         const accountName = await this.resolveAccountName();
-        // console.log('MetakeepAuthenticator.login() -> accountName', accountName);
         trace('accountName:', accountName);
+        this.onStep.next();
+
         const publicKey = metakeepCache.getEosAddress(this.userCredentials.email);
+        this.onStep.next();
+        trace('publicKey:', publicKey);
 
         try {
             const permission = 'active';
             this.loading = false;
-            // console.log('MetakeepAuthenticator.login() -> new MetakeepUser()');
             trace('new MetakeepUser()');
             const userInstance = new MetakeepUser({
                 accountName,
@@ -387,12 +393,15 @@ export class MetakeepAuthenticator extends Authenticator {
                 publicKey,
                 chainId: this.chainId,
                 endpoint: this.endpoint,
+                onStep: this.onStep,
             });
 
+            this.onStep.next();
             return [userInstance];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             this.loading = false;
+            this.onStep.next(null);
             throw new UALError(err.messsage, UALErrorType.Login, err, 'MetakeepAuthenticator');
         }
     };
@@ -402,6 +411,7 @@ export class MetakeepAuthenticator extends Authenticator {
      * Authenticator app's patterns.
      */
     logout = async (): Promise<void> => {
+        this.logger.method('logout');
         metakeepCache.setLogged(null);
         return;
     };
@@ -417,7 +427,7 @@ export class MetakeepAuthenticator extends Authenticator {
 // ------------------------------------------------------
 
 
-class MetakeepUser extends User {
+export class MetakeepUser extends User {
     private logger = new Logger('MetakeepUser');
     private keys: string[];
     private accountName: string;
@@ -426,18 +436,22 @@ class MetakeepUser extends User {
     private reasonCallback?: (transaction: any) => string;
 
     protected eosioCore: APIClient;
+
+    public onStep: Subject<void|null>;
     constructor({
         accountName,
         permission,
         publicKey,
         chainId,
         endpoint,
+        onStep,
     }: {
             accountName: string,
             permission: string,
             publicKey: string,
             chainId: string,
             endpoint: string,
+            onStep: Subject<void|null>,
     }) {
         super();
         // console.log('MetakeepUser.constructor()');
@@ -447,7 +461,7 @@ class MetakeepUser extends User {
         this.permission = permission;
         this.chainId = chainId;
         this.eosioCore = new APIClient({ url: endpoint });
-        // console.log('MetakeepUser.constructor() end');
+        this.onStep = onStep;
         trace('end');
     }
 
@@ -482,6 +496,7 @@ class MetakeepUser extends User {
 
             // Retrieve transaction headers
             trace('calling get_info');
+            this.onStep.next();
             const info = await this.eosioCore.v1.chain.get_info();
             const header = info.getTransactionHeader(expireSeconds);
 
@@ -496,6 +511,7 @@ class MetakeepUser extends User {
                 contract: x.account,
                 abi: abis[i],
             }));
+            this.onStep.next();
 
             // create complete well formed transaction
             const transaction = Transaction.from(
@@ -549,6 +565,7 @@ class MetakeepUser extends User {
             const reason = this.reasonCallback ? this.reasonCallback(originalTransaction) : 'sign this transaction';
             const response = await metakeep.signTransaction(complete_transaction, reason);
             const signature = response.signature;
+            this.onStep.next();
 
 
             // Pack the transaction for transport
@@ -581,9 +598,12 @@ class MetakeepUser extends User {
             };
             trace('finalResponse:', finalResponse);
 
+            this.onStep.next();
+
             return Promise.resolve(finalResponse);
 
         } catch (e: any) {
+            this.onStep.next(null);
             throw this.handleCatchError(e);
         }
     }

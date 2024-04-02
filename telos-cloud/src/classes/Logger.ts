@@ -49,20 +49,21 @@ MyClass.foo() fetchData returned: { ... }
 ```
 */
 
+let enabled = false;
+
 export class Logger {
     private namespace: string;
-    private enabled: boolean = false;
 
     constructor(namespace: string) {
         this.namespace = namespace;
     }
 
     public enable() {
-        this.enabled = true;
+        enabled = true;
     }
 
     method(method: string, ...args: any[]): (...args: any[]) => void {
-        if (!this.enabled) {
+        if (!enabled) {
             return () => {};
         }
         const processedArgs = args.map(arg => {
@@ -76,6 +77,9 @@ export class Logger {
                 } catch (e) {
                     return arg;
                 }
+            }
+            if (typeof arg === 'function') {
+                return 'function';
             }
             return arg;
         });

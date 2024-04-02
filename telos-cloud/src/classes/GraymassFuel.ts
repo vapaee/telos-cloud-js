@@ -14,6 +14,7 @@ import {
 } from '@greymass/eosio';
 // import { User } from './ual';
 import { User } from 'universal-authenticator-library';
+import { Subject } from 'rxjs';
 
 export interface FuelUserWrapperConfig {
     rpcEndpoint: string,
@@ -33,7 +34,8 @@ class FuelUserWrapper extends User {
     // expire time in millisec
     expireSeconds: number = 3600;
 
-    constructor(user: User) {
+
+    constructor(user: User, public onStep: Subject<void|null>) {
         super();
         // console.log('FuelUserWrapper.constructor() user:', user);
         this.user = user;
@@ -86,6 +88,7 @@ class FuelUserWrapper extends User {
             // Retrieve transaction headers
             const info = await client.v1.chain.get_info();
             const header = info.getTransactionHeader(this.expireSeconds);
+            this.onStep.next();
 
             const actions = originalTransaction.actions ?? [];
 
@@ -99,6 +102,7 @@ class FuelUserWrapper extends User {
                 contract: x.account,
                 abi: abis[i],
             }));
+            this.onStep.next();
 
             // create complete well formed transaction
             const transaction = Transaction.from(
@@ -129,6 +133,7 @@ class FuelUserWrapper extends User {
                 }),
                 method: 'POST',
             });
+            this.onStep.next();
 
             // Interpret the resulting JSON
             const rpResponse = await cosigned.json(); /*as ResourceProviderResponse*/
@@ -155,6 +160,7 @@ class FuelUserWrapper extends User {
                     modifiedTransaction,
                     Object.assign(originalconfig, { broadcast: false }),
                 ); /* as SignedTransactionResponse*/
+                this.onStep.next();
 
                 // When using CleosAuthenticator the transaction returns empty
                 if (!locallySigned.transaction.signatures) {
@@ -181,6 +187,8 @@ class FuelUserWrapper extends User {
                     status: pushResponse.processed.receipt.status,
                     transaction: modifiedTransaction,
                 };
+
+                this.onStep.next();
 
                 return Promise.resolve(finalResponse);
             
@@ -223,8 +231,8 @@ class FuelUserWrapper extends User {
 }
 
 // create an instance of FuelUserWrapper class and check fuel service availability
-export async function initFuelUserWrapper(user: User, config: FuelUserWrapperConfig): Promise<User> {
-    const fuelUserWrapper = new FuelUserWrapper(user);
+export async function initFuelUserWrapper(user: User, config: FuelUserWrapperConfig, onStep: Subject<void|null>): Promise<User> {
+    const fuelUserWrapper = new FuelUserWrapper(user, onStep);
     fuelUserWrapper.init(config);
     await fuelUserWrapper.setAvailability();
     return fuelUserWrapper;
