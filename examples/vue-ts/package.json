@@ -1,0 +1,38 @@
+{
+  "name": "vue-ts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vue-cli-service serve --open",
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "for-develop-use": {
+    "@vapaee/telos-cloud": "file:../../telos-cloud/dist"
+  },
+  "dependencies": {
+    "@greymass/eosio": "^0.7.0",
+    "@vapaee/telos-cloud": "file:../../telos-cloud/dist",
+    "axios": "^1.6.7",
+    "metakeep": "^2.2.1",
+    "rxjs": "^7.8.1",
+    "universal-authenticator-library": "^0.3.0",
+    "vue": "^3.2.13",
+    "vue-router": "^4.0.3"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
+    "@vue/cli-plugin-vuex": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "sass": "^1.70.0",
+    "sass-loader": "10.1.1",
+    "typescript": "~4.5.5"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
