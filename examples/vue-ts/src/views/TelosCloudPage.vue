@@ -124,6 +124,22 @@ export default defineComponent({
             window.open(`https://explorer.telos.net/account/${telos.userAccount}`, '_blank');
         };
 
+        // necesitamos escuchar la respuesta para poder loguear al usuario con esas credenciales
+        window.addEventListener('message', (event) => {
+            console.log('event.data', event);
+            try {
+                if (typeof event.data === 'string') {
+                    const credentials = JSON.parse(event.data);
+                    console.log('credentials', credentials);
+                    userAccount.value = credentials.account;
+                    isLogged.value = true;
+                    pubKeys.value = credentials.keys;
+                }
+            } catch (error) {
+                // console.error('Error parsing credentials:', error);
+            }
+        });
+
         return {
             logout,
             signExampleTransaction,
@@ -170,6 +186,8 @@ export default defineComponent({
                 </div>
             </template>
 
+
+            <iframe v-if="!isLogged" src="http://localhost:8081/?login=zero&iframe=http://localhost:8082/telos-cloud-redirect" width="377px" height="600px"></iframe>
     </div>
 </template>
 
