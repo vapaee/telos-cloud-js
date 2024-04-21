@@ -3,6 +3,10 @@ import { AntelopeError } from '../types';
 import * as Buffer from 'buffer';
 import { BehaviorSubject, Subject } from 'rxjs';
 
+import { Logger } from './Logger';
+
+const logger = new Logger('GoogleOneTap');
+
 export interface GoogleCredentials {
     email: string;
     jwt?: string;
@@ -69,13 +73,15 @@ export class GoogleOneTapController {
     }
 
     init(clientId: string) {
+        logger.method('init', clientId);
         this.clientId = clientId;
         this.installGoogleOneTapScript();
-        // console.log('GoogleOneTapController.init', clientId);
     }
 
     installGoogleOneTapScript() {
+        const trace = logger.method('installGoogleOneTapScript');
         if (google) {
+            trace('Google One Tap library already loaded');
             return;
         }
         const script = document.createElement('script');
@@ -89,6 +95,7 @@ export class GoogleOneTapController {
     }
 
     onGoogleLibraryLoad() {
+        const trace = logger.method('onGoogleLibraryLoad');
         if(!google){
             if (_window.google) {
                 google = _window.google;
@@ -97,6 +104,7 @@ export class GoogleOneTapController {
             }
         }
         if (google) {
+            trace('loaded. initializing');
             google.accounts.id.initialize({
                 client_id: this.clientId,
                 callback: (response: GoogleNotification | null) => {
@@ -127,39 +135,62 @@ export class GoogleOneTapController {
     }
 
     setButtonConfig(config: { theme: string, size: string }) {
+        logger.method('setButtonConfig', config);
         this.buttonConfig = config;
     }
 
     timer = setTimeout(() => { /**/ }, 0);
     renderButton(tag_id = 'google_btn') {
-        clearTimeout(this.timer);
-        this.timer = setTimeout(() => {
+        const trace = logger.method('renderButton', tag_id);
+        clearInterval(this.timer);
+        this.timer = setInterval(() => {
             const btn = document.getElementById(tag_id);
+            // we check if the first child element of the btn is a div, if so, then the button is already rendered
+            if (btn && btn.children[0] && btn.children[0].tagName === 'DIV') {
+                trace('button already rendered');
+                clearInterval(this.timer);
+                return;
+            }
             if (!btn) {
-                console.error('google button not found using tag_id: ', tag_id);
+                trace('button not found');
+            }
+            if (!google) {
+                trace('google not loaded yet');
             }
             if (google && btn) {
+                trace('rendering button');
                 google.accounts.id.renderButton(
                     btn, this.buttonConfig,
                 );
+                clearInterval(this.timer);
             }
         }, 100);
+
+        // we clear the interval after 5 seconds
+        setTimeout(() => {
+            clearInterval(this.timer);
+        }, 5000);
     }
 
+
     handleOneTapMoment(type: string, status: string, reason: string) {
+        logger.method('handleOneTapMoment', { type, status, reason });
         this.onMoment.next({ type, status, reason });
     }
 
     handleOneTapSuccess(response: SuccessResponse, jwt: string) {
+        logger.method('handleOneTapSuccess', response);
         const email = response.payload.email;
         this.onSuccessfulLogin.next({ email, jwt });
     }
 
     handleOneTapError (error: string) {
+        logger.method('handleOneTapError', error);
         this.onError.next(error);
     }
 
     logout() {
+        logger.method('logout');
         if (google) {
             google.accounts.id.disableAutoSelect();
             this.onSuccessfulLogin.next(null);
