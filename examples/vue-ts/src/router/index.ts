@@ -1,7 +1,4 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import TelosCloudPage from '../views/TelosCloudPage.vue'
-import TelosCloudRedirectPage from '../views/TelosCloudRedirectPage.vue'
-
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -10,14 +7,23 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/telos-cloud-redirect'
   },
   {
-    path: '/telos-cloud-no-creation',
-    name: 'telos-cloud-no-creation',
-    component: TelosCloudPage
+    path: '/telos-cloud-local',
+    name: 'telos-cloud-local',
+    component: () => import('@/views/local/TelosCloudPage.vue')
   },
   {
     path: '/telos-cloud-redirect',
     name: 'telos-cloud-redirect',
-    component: TelosCloudRedirectPage
+    component: () => import('@/views/redirect/TelosCloudPage.vue')
+  },
+  {
+    path: '/telos-cloud-iframe',
+    name: 'telos-cloud-iframe',
+    component: () => import('@/views/iframe/TelosCloudPage.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/telos-cloud-redirect'
   }
 ]
 

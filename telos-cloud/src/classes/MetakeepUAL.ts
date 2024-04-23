@@ -16,6 +16,7 @@ import { Subject } from 'rxjs';
 export interface UserCredentials {
     email: string;
     jwt: string;
+    account?: string;
 }
 
 export interface MetakeepUALOptions {
@@ -97,7 +98,7 @@ export class MetakeepAuthenticator extends Authenticator {
     private accountCreateAPI?: string;
     private appId: string;
     private loading = false;
-    private userCredentials: UserCredentials = { email: '', jwt: '' };
+    private userCredentials: UserCredentials = { email: '', jwt: '', account: '' };
 
     private accountSelector: MetakeepAccountSelector = metakeepDefaultAccountSelector;
     private accountNameSelector: MetakeepNameAccountSelector = metakeepDefaultAccountNameSelector;
@@ -287,8 +288,13 @@ export class MetakeepAuthenticator extends Authenticator {
             if (accountNames.length > 0) {
                 let selectedAccount = '';
                 if (accountNames.length > 1) {
-                    // if we have more than one account, we ask the user to select one using this callback
-                    selectedAccount = await this.accountSelector.selectAccount(accountNames);
+                    // if we have more than one account, first we try to take it from user credentials
+                    if (accountNames.includes(this.userCredentials.account ?? '')) {
+                        selectedAccount = this.userCredentials.account ?? '';
+                    } else {
+                        // we ask the user to select one using this callback
+                        selectedAccount = await this.accountSelector.selectAccount(accountNames);
+                    }
                     this.resetAccountSelector();
                     metakeepCache.setSelectedAccountName(this.userCredentials.email, this.chainId, selectedAccount);
                     return resolve(selectedAccount);

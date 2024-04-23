@@ -1,10 +1,11 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { TelosCloud } from '@vapaee/telos-cloud';
+
 import NavegationBar from '@/components/NavegationBar.vue';
 
 export default defineComponent({
-    name: 'TelosCloudRedirectPage',
+    name: 'TelosCloudPage',
     components: {
         NavegationBar,
     },
@@ -20,8 +21,17 @@ export default defineComponent({
         // -- telos cloud instance --
         const telos = new TelosCloud({
             appName: 'Telos Zero',
+            login: {
+                iframe: {
+                    usePopUp: true,
+                    syncWithWallet: true,
+                    containerElementId: 'google_btn',
+                    width: "377px",
+                    height: "600px",
+                },
+            },
             chain: {
-                chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
+                chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', // telos mainnet
                 rpcEndpoint: 'https://mainnet.telos.net',
             },
             fuel: {
@@ -31,18 +41,9 @@ export default defineComponent({
             metakeep: {
                 appId: 'ad5e05fb-280a-41ae-b186-5a2654567b92',
             },
-            googleOneTap: {
-                appId: '639241197544-kcubenhmti6u7ef3uj360n2lcl5cmn8c.apps.googleusercontent.com',
-                buttonId: 'google_btn',
-            },
-            accountCreation: {
-                // rpcEndpoint: 'https://mainnet.telos.net', // your own rpc endpoint
-                // clientId: 'your-client-id', // your own client id registered in our service whitelist
-                allowRedirect: true,
-            },
-            logger: true
+            logger: false
         });
-
+        
         // Handle login and logout events --
         telos.events.onLogin.subscribe(() => {
             userAccount.value = telos.userAccount;
@@ -73,6 +74,14 @@ export default defineComponent({
                 userAccount.value = '';
                 pubKeys.value = [];
                 isLogged.value = false;
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        const login = async () => {
+            try {
+                await telos.login();
             } catch (error) {
                 console.error(error);
             }
@@ -121,6 +130,7 @@ export default defineComponent({
 
         return {
             logout,
+            login,
             signExampleTransaction,
             visitAccount,
             userAccount,
@@ -137,21 +147,11 @@ export default defineComponent({
 <template>
     <NavegationBar />
     <div class="p-telos-cloud">
-            
+    
         <template v-if="!isLogged">
             <div class="p-telos-cloud__welcome-card">
-                <h1 class="p-telos-cloud__welcome-title">Cloud Login for Telos Zero (Redirect version)</h1>
-                <div class="c-login-buttons__google-btn" id="google_btn" data-client_id="${googleCtrl.clientId}">loading...</div>
-                <!-- Progress bar -->
-                <div class="p-telos-cloud__progress-bar" :style="`opacity: ${percent === -100 ? 0 : 1}`">
-                    <div
-                        :class="{
-                            'p-telos-cloud__progress-bar__fill': true,
-                            'p-telos-cloud__progress-bar__fill--filled': percent === 100,
-                        }"
-                        :style="{ width: percent.toString() + '%' }"
-                    ></div>
-                </div>
+                <h1 class="p-telos-cloud__welcome-title">Telos Cloud Login (iframe)</h1>
+                <button class="p-telos-cloud__welcome-login-btn p-telos-cloud--btn" @click="login">Login</button>
             </div>
         </template>
 
@@ -162,9 +162,9 @@ export default defineComponent({
 
                 <!-- Buttons -->
                 <div class="p-telos-cloud__logged-btns">
-                    <button class="p-telos-cloud__logged-logout-btn" @click="logout">Logout</button>
+                    <button class="p-telos-cloud__logged-logout-btn p-telos-cloud--btn" @click="logout">Logout</button>
                     <button
-                        :class="{'p-telos-cloud__logged-stake-btn': true, 'p-telos-cloud__logged-stake-btn--loading': isLoading }"
+                        :class="{'p-telos-cloud__logged-stake-btn': true, ' p-telos-cloud--btn': true, 'p-telos-cloud__logged-stake-btn--loading': isLoading }"
                         @click="signExampleTransaction">
                             Stake 0.0001 TLOS for CPU
                     </button>
@@ -207,7 +207,7 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: calc(100vh - 38px);
     width: 100%;
     background-image: linear-gradient(0.4turn,#071033,#6039a4);
         
@@ -264,7 +264,7 @@ export default defineComponent({
         color: blue;
     }
 
-    &__welcome-login-btn, &__logged-logout-btn, &__logged-stake-btn {
+    &--btn {
         padding: 10px 20px;
         border: none;
         border-radius: 5px;

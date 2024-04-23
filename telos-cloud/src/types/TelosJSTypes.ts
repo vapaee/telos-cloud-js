@@ -1,36 +1,53 @@
 export interface TelosCloudOptions {
-    appName?: string,
+    appName?: string;
+    login: { 
+        iframe?: {
+            usePopUp?: boolean;
+            syncWithWallet?: boolean;
+            containerElementId?: string;
+            width?: string;
+            height?: string;
+        };
+        redirect?: {
+            callbackUrl?: string;
+        };
+        local?: {
+            // If you want to use Google One Tap, you need to provide the appId
+            googleOneTap?: {
+                appId: string;
+                buttonId?: string;
+                config?: {
+                    theme: string;
+                    size: string;
+                };
+            };
+            // your own rpc endpoint
+            accountCreationEndpoint: string;
+            /*
+            this will create the following call in the user does not have an account:
+            curl 'https://accounts.create.foo/' \
+            --data-raw '{
+                "ownerKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
+                "activeKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
+                "jwt": "eyJhb...isRJig",
+                "suggestedName": ""
+            }'
+            */             
+        };
+    };
     chain: {
-        chainId: string,
-        rpcEndpoint: string,
-    },
+        chainId: string;
+        rpcEndpoint: string;
+    };
     fuel?: {
-        rpcEndpoint: string,
-        hyperionEndpoint: string,
-    },
+        rpcEndpoint: string;
+        hyperionEndpoint: string;
+    };
     metakeep: {
-        appId: string,
-        accountCreateAPI?: string,
-    },
-    googleOneTap?: {
-        appId: string,
-        buttonId?: string,
-        config?: { theme: string, size: string },
-    },
-    accountCreation?: {
-        // your own rpc endpoint
-        rpcEndpoint?: string, 
-
-        // your own client id registered in our service whitelist.
-        // NOTE: this feature has not support yet.
-        clientId?: string, 
-
-        // if allowRedirect, the user will be redirected to the account creation page if the account does not exist
-        // after the account is created, the user will be redirected back to the original page and autologin will be performed
-        // NOTE: this feature has not support yet.
-        allowRedirect?: boolean, 
-    },
-    logger?: true,
+        appId: string;
+        accountCreateAPI?: string;
+    };
+    logger?: boolean;
 }
 
 export interface TelosCloudLoggedUser {
@@ -39,4 +56,3 @@ export interface TelosCloudLoggedUser {
     email: string;
     keys: string[];
 }
-

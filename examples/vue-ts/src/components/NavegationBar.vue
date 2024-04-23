@@ -6,11 +6,16 @@
 <nav class="c-navbar" role="navigation" aria-label="main navigation">
     <div id="navbarBasicExample" class="c-navbar__navbar-menu">
         <div class="c-navbar__navbar-options">
-            <a class="c-navbar__navbar-item" href="/telos-cloud-no-creation">
-                Telos Cloud
+            <a class="c-navbar__navbar-item" href="/telos-cloud-local">
+                Local
             </a>
+            |
+            <a class="c-navbar__navbar-item" href="/telos-cloud-iFrame">
+                iFrame
+            </a>
+            |
             <a class="c-navbar__navbar-item" href="/telos-cloud-redirect">
-                Telos Cloud Redirect
+                Redirect
             </a>
         </div>
     </div>

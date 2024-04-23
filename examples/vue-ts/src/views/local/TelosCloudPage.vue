@@ -2,6 +2,7 @@
 import { defineComponent, ref } from 'vue';
 import { TelosCloud } from '@vapaee/telos-cloud';
 
+
 import NavegationBar from '@/components/NavegationBar.vue';
 
 export default defineComponent({
@@ -21,6 +22,26 @@ export default defineComponent({
         // -- telos cloud instance --
         const telos = new TelosCloud({
             appName: 'Telos Zero',
+            login: {
+                local: {
+                    googleOneTap: {
+                        appId: '639241197544-kcubenhmti6u7ef3uj360n2lcl5cmn8c.apps.googleusercontent.com',
+                        buttonId: 'google_btn',
+                    },
+                    // your own rpc endpoint
+                    accountCreationEndpoint: 'https://accounts.create.foo',
+                    /*
+                    this will create the following call in the user does not have an account:
+                    curl 'https://accounts.create.foo/' \
+                    --data-raw '{
+                        "ownerKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
+                        "activeKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
+                        "jwt": "eyJhb...isRJig",
+                        "suggestedName": ""
+                    }'
+                    */
+                }
+            },
             chain: {
                 chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', // telos mainnet
                 rpcEndpoint: 'https://mainnet.telos.net',
@@ -31,24 +52,6 @@ export default defineComponent({
             },
             metakeep: {
                 appId: 'ad5e05fb-280a-41ae-b186-5a2654567b92',
-            },
-            googleOneTap: {
-                appId: '639241197544-kcubenhmti6u7ef3uj360n2lcl5cmn8c.apps.googleusercontent.com',
-                buttonId: 'google_btn',
-            },
-            accountCreation: {
-                // your own rpc endpoint
-                rpcEndpoint: 'https://accounts.create.foo',
-                /*
-                this will create the following call in the user does not have an account:
-                curl 'https://accounts.create.foo/' \
-                --data-raw '{
-                    "ownerKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
-                    "activeKey": "EOS581My48JQK2gjpHcEg...FWkrAtF2M5qefcr",
-                    "jwt": "eyJhb...isRJig",
-                    "suggestedName": ""
-                }'
-                */
             },
             logger: true
         });
@@ -129,22 +132,6 @@ export default defineComponent({
             window.open(`https://explorer.telos.net/account/${telos.userAccount}`, '_blank');
         };
 
-        // necesitamos escuchar la respuesta para poder loguear al usuario con esas credenciales
-        window.addEventListener('message', (event) => {
-            console.log('event.data', event);
-            try {
-                if (typeof event.data === 'string') {
-                    const credentials = JSON.parse(event.data);
-                    console.log('credentials', credentials);
-                    userAccount.value = credentials.account;
-                    isLogged.value = true;
-                    pubKeys.value = credentials.keys;
-                }
-            } catch (error) {
-                // console.error('Error parsing credentials:', error);
-            }
-        });
-
         return {
             logout,
             signExampleTransaction,
@@ -163,9 +150,10 @@ export default defineComponent({
 <template>
     <NavegationBar />
     <div class="p-telos-cloud">
+
         <template v-if="!isLogged">
             <div class="p-telos-cloud__welcome-card">
-                <h1 class="p-telos-cloud__welcome-title">Cloud Login for Telos Zero</h1>
+                <h1 class="p-telos-cloud__welcome-title">Telos Cloud Login (local)</h1>
                 <div class="c-login-buttons__google-btn" id="google_btn" data-client_id="${googleCtrl.clientId}">loading...</div>
                 <!-- Progress bar -->
                 <div class="p-telos-cloud__progress-bar" :style="`opacity: ${percent === -100 ? 0 : 1}`">
@@ -213,8 +201,6 @@ export default defineComponent({
             </div>
         </template>
 
-
-            <iframe v-if="!isLogged" src="http://localhost:8081/?login=zero&iframe=http://localhost:8082/telos-cloud-redirect" width="377px" height="600px"></iframe>
     </div>
 </template>
 
@@ -234,7 +220,7 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: calc(100vh - 38px);
     width: 100%;
     background-image: linear-gradient(0.4turn,#071033,#6039a4);
         
