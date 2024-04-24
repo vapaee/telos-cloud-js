@@ -4,7 +4,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     // el home redirige a la página principal telos-cloud
     path: '/',
-    redirect: '/telos-cloud-redirect'
+    redirect: '/telos-cloud-local'
   },
   {
     path: '/telos-cloud-local',
@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/telos-cloud-redirect'
+    redirect: '/telos-cloud-local'
   }
 ]
 

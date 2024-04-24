@@ -48,6 +48,7 @@ export interface TelosCloudOptions {
         accountCreateAPI?: string;
     };
     logger?: boolean;
+    walletTrace?: boolean;
 }
 
 export interface TelosCloudLoggedUser {

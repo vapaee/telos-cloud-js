@@ -161,6 +161,13 @@ export class MetakeepAuthenticator extends Authenticator {
     setUserCredentials(credentials: UserCredentials): void {
         this.logger.method('setUserCredentials', credentials);
         this.userCredentials = credentials;
+
+        if (credentials.account) {
+            this.setAccountSelector({
+                selectAccount: () => Promise.resolve(credentials.account as string),
+            });
+        }
+
         metakeepCache.setLogged(credentials.email);
     }
 
@@ -297,7 +304,6 @@ export class MetakeepAuthenticator extends Authenticator {
                     }
                     this.resetAccountSelector();
                     metakeepCache.setSelectedAccountName(this.userCredentials.email, this.chainId, selectedAccount);
-                    return resolve(selectedAccount);
                 } else {
                     selectedAccount = accountNames[0];
                 }

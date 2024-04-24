@@ -10,12 +10,12 @@
                 Local
             </a>
             |
-            <a class="c-navbar__navbar-item" href="/telos-cloud-iFrame">
-                iFrame
-            </a>
-            |
             <a class="c-navbar__navbar-item" href="/telos-cloud-redirect">
                 Redirect
+            </a>
+            |
+            <a class="c-navbar__navbar-item" href="/telos-cloud-iFrame">
+                iFrame
             </a>
         </div>
     </div>

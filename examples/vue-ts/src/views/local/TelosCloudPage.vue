@@ -2,13 +2,14 @@
 import { defineComponent, ref } from 'vue';
 import { TelosCloud } from '@vapaee/telos-cloud';
 
-
 import NavegationBar from '@/components/NavegationBar.vue';
+import CodeContainer from '@/components/CodeContainer.vue';
 
 export default defineComponent({
     name: 'TelosCloudPage',
     components: {
         NavegationBar,
+        CodeContainer,
     },
     setup() {
         // -- variables --
@@ -165,6 +166,7 @@ export default defineComponent({
                         :style="{ width: percent.toString() + '%' }"
                     ></div>
                 </div>
+                <CodeContainer :config="'config_for_local'" />                
             </div>
         </template>
 
@@ -198,6 +200,8 @@ export default defineComponent({
                 <a class="p-telos-cloud__trx" v-if="transactionId" :href="'https://explorer.telos.net/transaction/' + transactionId" target="_blank">
                     {{ transactionId }}
                 </a>
+
+                <CodeContainer :config="'config_for_local'" />
             </div>
         </template>
 

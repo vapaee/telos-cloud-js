@@ -33,7 +33,7 @@ export class TelosCloud {
     onProgress = new Subject<number>();
     step = -1;
     steps = 5;
-    stepsEnabled = true;
+    // stepsEnabled = true;
 
     endPoint = '';
 
@@ -54,17 +54,19 @@ export class TelosCloud {
                 } else {
                     this.step++;
                     logger.method('onStep', this.step);
-                    if (this.stepsEnabled) {
+                    // if (this.stepsEnabled) {
                         this.onProgress.next(this.step/this.steps);
-                    }
+                    //}
                 }
             },
         });
+        let timer = setTimeout(() => {});
         this.onProgress.subscribe({
             next: (progress) => {
                 logger.method('onProgress', progress);
-                if (progress === 1) {
-                    setTimeout(() => {
+                if (progress >= 1) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
                         this.onProgress.next(-1);
                     }, 1500);
                 }
@@ -158,9 +160,10 @@ export class TelosCloud {
                             ...credentials,
                         };
                         this.saveLoggedUser();
-                        this.stepsEnabled = false;
+                        // this.stepsEnabled = false;
+                        this.closeIframe();
                         await this.performTelosCloudLogin(credentials);
-                        this.stepsEnabled = true;
+                        // this.stepsEnabled = true;
                     }
                 } catch (error) {
                     // console.error('Error parsing credentials:', error);
@@ -229,9 +232,9 @@ export class TelosCloud {
                     jwt: '',
                     account: this.logged.account,
                 }
-                this.stepsEnabled = false;
+                // this.stepsEnabled = false;
                 await this.performTelosCloudLogin(credentials);
-                this.stepsEnabled = true;
+                // this.stepsEnabled = true;
             }
         } else {
             if (this.config?.login?.iframe?.syncWithWallet) {
@@ -348,7 +351,7 @@ export class TelosCloud {
             
             // create iframe
             const iframeElement = document.createElement('iframe');
-            iframeElement.src = `${this.endPoint}/?login=zero&iframe=${window.location.origin}&${iframe.syncWithWallet ? 'logout=true' : ''}&trace=${this.config.logger ? 'true' : 'false'}`;
+            iframeElement.src = `${this.endPoint}/?login=zero&iframe=${window.location.origin}&${iframe.syncWithWallet ? 'logout=true' : ''}&trace=${this.config.walletTrace ? 'true' : 'false'}`;
             iframeElement.width = width;
             iframeElement.height = height;
             trace('parent:', parent);
@@ -383,8 +386,7 @@ export class TelosCloud {
     // ---------------------------------------------
 
     async login(credentials: TelosCloudLoggedUser | null = null): Promise<boolean> {
-        // logger.method('login', credentials);
-        console.log('login', credentials);
+        logger.method('login', credentials);
         const ever = new Promise<boolean>(() => {});
 
         if (!this.config?.login) {

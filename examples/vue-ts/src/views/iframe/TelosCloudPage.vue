@@ -3,11 +3,13 @@ import { defineComponent, ref } from 'vue';
 import { TelosCloud } from '@vapaee/telos-cloud';
 
 import NavegationBar from '@/components/NavegationBar.vue';
+import CodeContainer from '@/components/CodeContainer.vue';
 
 export default defineComponent({
     name: 'TelosCloudPage',
     components: {
         NavegationBar,
+        CodeContainer,
     },
     setup() {
         // -- variables --
@@ -41,7 +43,7 @@ export default defineComponent({
             metakeep: {
                 appId: 'ad5e05fb-280a-41ae-b186-5a2654567b92',
             },
-            logger: false
+            logger: true
         });
         
         // Handle login and logout events --
@@ -55,7 +57,6 @@ export default defineComponent({
             userAccount.value = '';
             pubKeys.value = [];
             isLogged.value = false;
-            telos.reset();
         });
 
         telos.onProgress.subscribe((p) => {
@@ -152,6 +153,17 @@ export default defineComponent({
             <div class="p-telos-cloud__welcome-card">
                 <h1 class="p-telos-cloud__welcome-title">Telos Cloud Login (iframe)</h1>
                 <button class="p-telos-cloud__welcome-login-btn p-telos-cloud--btn" @click="login">Login</button>
+                <!-- Progress bar -->
+                <div class="p-telos-cloud__progress-bar" :style="`opacity: ${percent === -100 ? 0 : 1}`">
+                    <div
+                        :class="{
+                            'p-telos-cloud__progress-bar__fill': true,
+                            'p-telos-cloud__progress-bar__fill--filled': percent === 100,
+                        }"
+                        :style="{ width: percent.toString() + '%' }"
+                    ></div>
+                </div>                
+                <CodeContainer :config="'config_for_iframe'" />
             </div>
         </template>
 
@@ -185,6 +197,8 @@ export default defineComponent({
                 <a class="p-telos-cloud__trx" v-if="transactionId" :href="'https://explorer.telos.net/transaction/' + transactionId" target="_blank">
                     {{ transactionId }}
                 </a>
+
+                <CodeContainer :config="'config_for_iframe'" />
             </div>
         </template>
 
