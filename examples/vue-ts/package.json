@@ -13,6 +13,7 @@
   "dependencies": {
     "@greymass/eosio": "^0.7.0",
     "@vapaee/telos-cloud": "file:../../telos-cloud/dist",
+    "@vapaee/logger": "^0.9.1",
     "axios": "^1.6.7",
     "metakeep": "^2.2.1",
     "rxjs": "^7.8.1",

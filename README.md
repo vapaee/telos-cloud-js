@@ -31,7 +31,8 @@ import { TelosCloud } from '@vapaee/telos-cloud';
 const telos = new TelosCloud({
     appName: 'App Name',
     chain: {
-        chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', // telos mainnet
+         // telos mainnet
+        chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
         rpcEndpoint: 'https://mainnet.telos.net',
     },
     fuel: {
@@ -100,7 +101,14 @@ telos.events.onLogout.subscribe(() => {
     userAccount.value = '';
     pubKeys.value = [];
     isLogged.value = false;
-    telos.reset();
+});
+```
+
+You can also subscribe to the onProgress event which will return a -1 if the there's no action in progress. Otherwise, it will be throwing the percentage of the progress for the current action, wether is a transaction or a login action.
+
+```ts
+telos.onProgress.subscribe((p) => {
+    percent.value = Math.round(p * 100);
 });
 ```
 

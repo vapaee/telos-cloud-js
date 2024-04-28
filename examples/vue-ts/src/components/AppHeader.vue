@@ -88,9 +88,9 @@ const configs = {
 } as {[keys: string]: string};
 
 const urls = {
-    config_for_iframe: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/iframe/TelosCloudPage.vue',
-    config_for_local: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/local/TelosCloudPage.vue',
-    config_for_redirect: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/redirect/TelosCloudPage.vue',
+    config_for_local: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/local/TelosCloudPage.vue#L24-L58',
+    config_for_redirect: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/redirect/TelosCloudPage.vue#L24-L43',
+    config_for_iframe: 'https://github.com/vapaee/telos-cloud-js/blob/main/examples/vue-ts/src/views/iframe/TelosCloudPage.vue#L24-L47',
 } as {[keys: string]: string};
 
 const props = defineProps<{

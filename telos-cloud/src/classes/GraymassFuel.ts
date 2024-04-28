@@ -10,19 +10,33 @@ import {
     PackedTransaction,
     PermissionLevel,
     Serializer,
+    Signature,
+    SignedTransaction,
     Transaction,
 } from '@greymass/eosio';
-// import { User } from './ual';
+
 import { User } from 'universal-authenticator-library';
 import { Subject } from 'rxjs';
+
+import { Logger } from './Logger';
+const logger = new Logger('FuelUserWrapper');
 
 export interface FuelUserWrapperConfig {
     rpcEndpoint: string,
     hyperionEndpoint: string,
 }
 
+export interface ResourceProviderResponse {
+    code: number;
+    data: {
+        request: [string, SignedTransaction];
+        signatures: Signature[];
+    };
+}
+
 // Wrapper for the user to intersect the signTransaction call
 // Use initFuelUserWrapper() method to initialize an instance of the class
+
 class FuelUserWrapper extends User {
     user: User;
     fuelServiceEnabled = false;
@@ -37,12 +51,12 @@ class FuelUserWrapper extends User {
 
     constructor(user: User, public onStep: Subject<void|null>) {
         super();
-        // console.log('FuelUserWrapper.constructor() user:', user);
+        logger.method('constructor', { user });
         this.user = user;
     }
 
     init(config: FuelUserWrapperConfig) {
-        // console.log('FuelUserWrapper.init() config:', config);
+        logger.method('init', { config });
         this.client = new APIClient({
             url: config.hyperionEndpoint,
         });
@@ -52,7 +66,7 @@ class FuelUserWrapper extends User {
 
     // called immediately after class instantiation in initFuelUserWrapper()
     async setAvailability() {
-        // console.log('FuelUserWrapper.setAvailability()');
+        logger.method('setAvailability');
         if (!this.fuelRpc){
             return;
         };
@@ -66,13 +80,13 @@ class FuelUserWrapper extends User {
 
     async signTransaction(
         originalTransaction: AnyTransaction,
-        originalconfig: SignTransactionConfig,
+        originalConfig: SignTransactionConfig,
     ): Promise<SignTransactionResponse> {
-        // console.log('FuelUserWrapper.signTransaction() originalTransaction:', originalTransaction, 'originalconfig:', originalconfig);
+        const trace = logger.method('signTransaction', { originalTransaction, originalConfig });
         try {
             // if fuel service disabled, send tx using generic ual user method
             if (!this.fuelServiceEnabled) {
-                return this.user.signTransaction(originalTransaction, originalconfig);
+                return this.user.signTransaction(originalTransaction, originalConfig);
             }
 
             if (!this.client) {
@@ -88,6 +102,7 @@ class FuelUserWrapper extends User {
             // Retrieve transaction headers
             const info = await client.v1.chain.get_info();
             const header = info.getTransactionHeader(this.expireSeconds);
+            trace('Step - got transaction header:', header);
             this.onStep.next();
 
             const actions = originalTransaction.actions ?? [];
@@ -102,6 +117,7 @@ class FuelUserWrapper extends User {
                 contract: x.account,
                 abi: abis[i],
             }));
+            trace('Step - got abis:', abis_and_names);
             this.onStep.next();
 
             // create complete well formed transaction
@@ -133,11 +149,11 @@ class FuelUserWrapper extends User {
                 }),
                 method: 'POST',
             });
-            this.onStep.next();
 
             // Interpret the resulting JSON
-            const rpResponse = await cosigned.json(); /*as ResourceProviderResponse*/
-            // console.log('FuelUserWrapper.signTransaction() rpResponse:', rpResponse);
+            const rpResponse: ResourceProviderResponse = await cosigned.json();
+            trace('Step - provider response:', { code: rpResponse.code, rpResponse, cosigned });
+            this.onStep.next();
             switch (rpResponse.code) {
             case 402:
                 // Resource Provider provided signature in exchange for a fee
@@ -151,15 +167,16 @@ class FuelUserWrapper extends User {
 
                 const { data } = rpResponse;
                 const [, returnedTransaction] = data.request;
-                const modifiedTransaction/*: SignedTransaction*/ = returnedTransaction;
+                const modifiedTransaction: SignedTransaction = returnedTransaction;
 
                 modifiedTransaction.signatures = [...data.signatures];
                 // Sign the modified transaction
-                const locallySigned/*: SignedTransactionResponse*/ =
+                const locallySigned: SignTransactionResponse =
                 await this.user.signTransaction(
                     modifiedTransaction,
-                    Object.assign(originalconfig, { broadcast: false }),
-                ); /* as SignedTransactionResponse*/
+                    Object.assign(originalConfig, { broadcast: false }),
+                );
+                trace('Step - locally signed:', locallySigned);
                 this.onStep.next();
 
                 // When using CleosAuthenticator the transaction returns empty
@@ -176,18 +193,20 @@ class FuelUserWrapper extends User {
                 ];
 
                 // Broadcast the signed transaction to the blockchain
+                trace('broadcasting transaction:', modifiedTransaction);
                 const pushResponse = await client.v1.chain.push_transaction(
                     modifiedTransaction,
                 );
 
                 // we compose the final response
-                const finalResponse/*: SignTransactionResponse*/ = {
+                const finalResponse = {
                     wasBroadcast: true,
                     transactionId: pushResponse.transaction_id,
                     status: pushResponse.processed.receipt.status,
                     transaction: modifiedTransaction,
-                };
+                } as SignTransactionResponse;
 
+                trace('Step - final response:', finalResponse);
                 this.onStep.next();
 
                 return Promise.resolve(finalResponse);
@@ -206,7 +225,7 @@ class FuelUserWrapper extends User {
             }
 
             // If we got here it means the resource provider will not participate in this transaction
-            return this.user.signTransaction(originalTransaction, originalconfig);
+            return this.user.signTransaction(originalTransaction, originalConfig);
         } catch (e) {
             throw e;
         }

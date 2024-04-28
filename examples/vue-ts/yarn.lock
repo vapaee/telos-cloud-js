@@ -534,6 +534,11 @@
   dependencies:
     "@types/node" "*"
 
+"@vapaee/logger@^0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@vapaee/logger/-/logger-0.9.1.tgz#883c8d6d2335cf61467aeff8b4c7043db4322689"
+  integrity sha512-iGfLKM6tcLPjffaPrmLwQTgYg6ZGmpU4dkLUvBxEAqVmS/h/znQOww/RHYPP9fGu/WTG5agJ3XvXYAvg1fkazg==
+
 "@vapaee/telos-cloud@file:../../telos-cloud/dist":
   version "0.0.0"
 

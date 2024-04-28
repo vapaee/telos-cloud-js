@@ -666,6 +666,11 @@
   dependencies:
     "@types/yargs-parser" "*"
 
+"@vapaee/logger@^0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@vapaee/logger/-/logger-0.9.1.tgz#883c8d6d2335cf61467aeff8b4c7043db4322689"
+  integrity sha512-iGfLKM6tcLPjffaPrmLwQTgYg6ZGmpU4dkLUvBxEAqVmS/h/znQOww/RHYPP9fGu/WTG5agJ3XvXYAvg1fkazg==
+
 ansi-escapes@^4.2.1:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
