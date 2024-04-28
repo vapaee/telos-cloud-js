@@ -102,7 +102,7 @@ class FuelUserWrapper extends User {
             // Retrieve transaction headers
             const info = await client.v1.chain.get_info();
             const header = info.getTransactionHeader(this.expireSeconds);
-            trace('Step - got transaction header:', header);
+            trace('Step 1 - got transaction header:', header);
             this.onStep.next();
 
             const actions = originalTransaction.actions ?? [];
@@ -117,7 +117,7 @@ class FuelUserWrapper extends User {
                 contract: x.account,
                 abi: abis[i],
             }));
-            trace('Step - got abis:', abis_and_names);
+            trace('Step 2 - got abis:', abis_and_names);
             this.onStep.next();
 
             // create complete well formed transaction
@@ -152,7 +152,7 @@ class FuelUserWrapper extends User {
 
             // Interpret the resulting JSON
             const rpResponse: ResourceProviderResponse = await cosigned.json();
-            trace('Step - provider response:', { code: rpResponse.code, rpResponse, cosigned });
+            trace('Step 3 - provider response:', { code: rpResponse.code, rpResponse, cosigned });
             this.onStep.next();
             switch (rpResponse.code) {
             case 402:
@@ -176,7 +176,7 @@ class FuelUserWrapper extends User {
                     modifiedTransaction,
                     Object.assign(originalConfig, { broadcast: false }),
                 );
-                trace('Step - locally signed:', locallySigned);
+                trace('Step 8 - locally signed:', locallySigned);
                 this.onStep.next();
 
                 // When using CleosAuthenticator the transaction returns empty
@@ -206,13 +206,17 @@ class FuelUserWrapper extends User {
                     transaction: modifiedTransaction,
                 } as SignTransactionResponse;
 
-                trace('Step - final response:', finalResponse);
+                trace('Step 9 - final response:', finalResponse);
                 this.onStep.next();
 
                 return Promise.resolve(finalResponse);
             
             case 400: 
-            // Resource Provider refused to sign the transaction, aborting
+                // Resource Provider refused to sign the transaction, aborting
+                // "Network resources not required by this account."
+                trace('Steps 4-5 - Resource Provider refused to sign the transaction, aborting');
+                this.onStep.next();
+                this.onStep.next();
                 break;
             
             default:

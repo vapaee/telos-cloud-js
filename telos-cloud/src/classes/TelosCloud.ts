@@ -14,7 +14,7 @@ const TELOS_CLOUD_LOGGED_USER = 'telos-cloud.logged';
 const CAIN_ID__TELOS_MAINNET = '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11';
 
 const LOGGIN_STEPS = 7;
-const TRANSACTION_STEPS = 8;
+const TRANSACTION_STEPS = 9;
 
 const MAINNET_URL = 'https://deploy-preview-796--wallet-develop-mainnet.netlify.app';
 const STAGING_URL = 'https://deploy-preview-796--wallet-staging.netlify.app';
@@ -33,7 +33,6 @@ export class TelosCloud {
     onProgress = new Subject<number>();
     step = -1;
     steps = 5;
-    // stepsEnabled = true;
 
     endPoint = '';
 
@@ -54,9 +53,7 @@ export class TelosCloud {
                 } else {
                     this.step++;
                     logger.method('onStep', this.step);
-                    // if (this.stepsEnabled) {
-                        this.onProgress.next(this.step/this.steps);
-                    //}
+                    this.onProgress.next(this.step/this.steps);
                 }
             },
         });
@@ -90,6 +87,7 @@ export class TelosCloud {
 
     init(config: TelosCloudOptions) {
         const trace = logger.method('init', config);
+        trace('version:', version);
         this.config = config;
 
         const url = config.chain.rpcEndpoint;
@@ -160,10 +158,8 @@ export class TelosCloud {
                             ...credentials,
                         };
                         this.saveLoggedUser();
-                        // this.stepsEnabled = false;
                         this.closeIframe();
                         await this.performTelosCloudLogin(credentials);
-                        // this.stepsEnabled = true;
                     }
                 } catch (error) {
                     // console.error('Error parsing credentials:', error);
@@ -232,9 +228,7 @@ export class TelosCloud {
                     jwt: '',
                     account: this.logged.account,
                 }
-                // this.stepsEnabled = false;
                 await this.performTelosCloudLogin(credentials);
-                // this.stepsEnabled = true;
             }
         } else {
             if (this.config?.login?.iframe?.syncWithWallet) {

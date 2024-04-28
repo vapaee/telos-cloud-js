@@ -7,7 +7,9 @@
         "dev": "nodemon --watch telos-cloud/src --ext ts,js,json --exec \"yarn build-telos-cloud && yarn dev:vue-ts\"",
         "postinstall": "yarn install-telos-cloud && yarn install-examples",
         "install-telos-cloud": "cd telos-cloud && yarn",
-        "install-examples": "cd examples/vue-ts && yarn",
+        "install-vue-ts": "cd examples/vue-ts && yarn",
+        "install-demo": "cd examples/demo && yarn",
+        "install-examples": "yarn install-vue-ts && yarn install-demo",
         "publish-on-npm": "cd telos-cloud && yarn build && npm publish"
     },
     "devDependencies": {

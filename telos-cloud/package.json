@@ -1,6 +1,6 @@
 {
   "name": "@vapaee/telos-cloud",
-  "version": "0.9.20",
+  "version": "0.9.22",
   "description": "Telos Zero Cloud Login",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

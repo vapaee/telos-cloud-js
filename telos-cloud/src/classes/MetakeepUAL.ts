@@ -466,7 +466,6 @@ export class MetakeepUser extends User {
             onStep: Subject<void|null>,
     }) {
         super();
-        // console.log('MetakeepUser.constructor()');
         const trace = this.logger.method('constructor', accountName, permission, publicKey, chainId, endpoint);
         this.keys = [publicKey];
         this.accountName = accountName;
@@ -496,7 +495,6 @@ export class MetakeepUser extends User {
     * @param transaction    The transaction to be signed (a object that matches the RpcAPI structure).
     */
     signTransaction = async (originalTransaction: any, options: any = {}): Promise<SignTransactionResponse> => {
-        // console.log('MetakeepUser.signTransaction()', originalTransaction, options);
         const trace = this.logger.method('signTransaction', originalTransaction, options);
         if (!metakeep) {
             throw new Error('metakeep is not initialized');
@@ -507,7 +505,7 @@ export class MetakeepUser extends User {
             const expireSeconds = 120;
 
             // Retrieve transaction headers
-            trace('calling get_info');
+            trace('Step 4 - calling get_info');
             this.onStep.next();
             const info = await this.eosioCore.v1.chain.get_info();
             const header = info.getTransactionHeader(expireSeconds);
@@ -523,6 +521,7 @@ export class MetakeepUser extends User {
                 contract: x.account,
                 abi: abis[i],
             }));
+            trace('Step 5 - got all contract abis:', abis_and_names);
             this.onStep.next();
 
             // create complete well formed transaction
@@ -577,6 +576,7 @@ export class MetakeepUser extends User {
             const reason = this.reasonCallback ? this.reasonCallback(originalTransaction) : 'sign this transaction';
             const response = await metakeep.signTransaction(complete_transaction, reason);
             const signature = response.signature;
+            trace('Step 6 - got signature:', signature);
             this.onStep.next();
 
 
@@ -588,6 +588,8 @@ export class MetakeepUser extends User {
             });
 
             if (options.broadcast === false) {
+                trace('Step 7 - broadcast false');
+                this.onStep.next();
                 return Promise.resolve({
                     wasBroadcast: false,
                     transactionId: '',
@@ -608,7 +610,7 @@ export class MetakeepUser extends User {
                 status: pushResponse.processed.receipt.status,
                 transaction: packedTransaction,
             };
-            trace('finalResponse:', finalResponse);
+            trace('Step 7 - final response:', finalResponse);
 
             this.onStep.next();
 
