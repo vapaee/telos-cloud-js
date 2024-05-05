@@ -2,8 +2,10 @@
   "name": "vue-ts",
   "version": "0.0.0",
   "private": true,
+  "homepage": "https://vapaee.github.io/telos-cloud-js/",
   "scripts": {
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@greymass/eosio": "^0.7.0",
@@ -21,6 +23,7 @@
     "@vue/cli-plugin-typescript": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "gh-pages": "^6.1.1",
     "sass": "^1.70.0",
     "sass-loader": "10.1.1",
     "typescript": "~4.5.5"
