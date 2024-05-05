@@ -2,7 +2,7 @@
     "license": "BSD 3-Clause License",
     "scripts": {
         "dev:vue-ts": "cd examples/vue-ts && rm node_modules -fr; yarn; yarn dev;",
-        "clear": "rm -fr telos-cloud/dist; rm -fr telos-cloud/node_modules; rm -fr examples/*/node_modules",
+        "clear": "rm -fr telos-cloud/dist; rm -fr telos-cloud/node_modules; rm -fr examples/*/node_modules; rm -fr examples/*/dist",
         "build-telos-cloud": "cd telos-cloud && yarn build",
         "dev": "nodemon --watch telos-cloud/src --ext ts,js,json --exec \"yarn build-telos-cloud && yarn dev:vue-ts\"",
         "postinstall": "yarn install-telos-cloud && yarn install-examples",
