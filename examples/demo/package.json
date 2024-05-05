@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@greymass/eosio": "^0.7.0",
-    "@vapaee/telos-cloud": "0.9.21",
+    "@vapaee/telos-cloud": "0.9.27",
     "@vapaee/logger": "^0.9.1",
     "axios": "^1.6.7",
     "metakeep": "^2.2.1",

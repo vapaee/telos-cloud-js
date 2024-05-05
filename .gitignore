@@ -24,6 +24,10 @@ pnpm-debug.log*
 
 # repos specific
 telos-cloud/dist
+telos-cloud/lib
 telos-cloud/node_modules
+telos-cloud/styles
+telos-cloud/vapaee-telos-cloud-*.tgz
 examples/*/node_modules
 examples/*/dist
+examples/*/build
