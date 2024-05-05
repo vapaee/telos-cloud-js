@@ -23,7 +23,15 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - name: Deploy demo with gh-pages
+    - name: Build Demo with yarn
       uses: borales/actions-yarn@v4
       with:
-        cmd: deploy
+        cmd: build-demo
+    - name: Deploy Demo with gh-pages
+      run: |
+        cd examples/demo
+        pwd
+        git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+        npm run deploy -- -u "github-actions-bot <support+actions@github.com>"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
