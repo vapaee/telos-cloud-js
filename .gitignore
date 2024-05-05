@@ -25,4 +25,5 @@ pnpm-debug.log*
 # repos specific
 telos-cloud/dist
 telos-cloud/node_modules
-examples/vue-ts/node_modules
+examples/*/node_modules
+examples/*/dist
