@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://vapaee.github.io/telos-cloud-js/",
   "scripts": {
+    "dev": "vue-cli-service serve --open",
     "build": "vue-cli-service build",
     "deploy": "gh-pages -d build"
   },

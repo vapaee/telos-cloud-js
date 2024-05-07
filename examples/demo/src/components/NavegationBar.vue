@@ -6,17 +6,15 @@
 <nav class="c-navbar" role="navigation" aria-label="main navigation">
     <div id="navbarBasicExample" class="c-navbar__navbar-menu">
         <div class="c-navbar__navbar-options">
-            <a class="c-navbar__navbar-item" href="/telos-cloud-local">
+            <router-link class="c-navbar__navbar-item" :to="{ name: 'telos-cloud-local' }">
                 Local
-            </a>
-            |
-            <a class="c-navbar__navbar-item" href="/telos-cloud-redirect">
+            </router-link>
+            <router-link class="c-navbar__navbar-item" :to="{ name: 'telos-cloud-redirect' }">
                 Redirect
-            </a>
-            |
-            <a class="c-navbar__navbar-item" href="/telos-cloud-iFrame">
+            </router-link>
+            <router-link class="c-navbar__navbar-item" :to="{ name: 'telos-cloud-iframe' }">
                 iFrame
-            </a>
+            </router-link>
         </div>
     </div>
 </nav>
