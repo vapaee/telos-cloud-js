@@ -1,5 +1,7 @@
 # telos-cloud.js
 
+### [Check the Demo](https://vapaee.github.io/telos-cloud-js)
+
 ## Intro
 Bridging the gap between the traditional web2 world and the emerging web3 landscape is a crucial step toward massive adoption, yet it poses significant challenges due to the complexity of the technologies involved. 
 
